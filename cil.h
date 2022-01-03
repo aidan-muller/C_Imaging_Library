@@ -197,12 +197,20 @@ void get_png_pixels(int* data, size_t data_size, int w, int h, int color_type) {
 				if (filter_methods[j] == 2) {
 					pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n] + pixel_data[j-1][i][n])%256;
 				}
+				if (filter_methods[j] == 3) {
+					if (i == 0) {
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+(int)floor((float)pixel_data[j-1][i][n]/(float)2));
+					}
+					else {
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+(int)floor((float)(pixel_data[j-1][i][n]+pixel_data[j][i-1][n])/(float)2));
+					}
+				}
 			}
 		}
 	}
 	for (int j = 0; j < 4; j++) {
 		for (int i = 0; i < 4; i++) {
-			printf("%d ", pixel_data[1][j][i]);
+			printf("%d ", pixel_data[3][j][i]);
 		}
 		printf("\n");
 	}

@@ -1,3 +1,7 @@
+// C Imaging Library
+// Written by Aidan Muller
+// 03/01/2020 18:00
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

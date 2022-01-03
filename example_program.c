@@ -1,3 +1,7 @@
+// Example program using CIL
+// Written by Aidan Muller
+// This program reads a png file and writes the decompressed data (has not been through filters) to a text file.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "cil.h"

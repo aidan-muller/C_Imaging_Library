@@ -1,10 +1,7 @@
-// C Imaging Library
-// Written by Aidan Muller
-// 03/01/2020 18:00
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <zlib.h>
 
 // Get size of png
@@ -149,4 +146,36 @@ void decompress_compressed_png_data(int* compressed_data, size_t compressed_size
 	}
 	free(ostream);
 	free(istream);
+}
+
+// Get pixel data
+void get_png_pixels(int* data, size_t data_size, int w, int h, int color_type) {
+	// Number of elements for the color type (e.g. RGB -> 3)
+	int color_types[7] = {1, 0, 3, 1, 2, 0, 4};
+	int pixel_data[h][w][color_types[color_type]];
+	// Get size of each row
+	int row_size = 1 + (w*color_types[color_type]);
+	int filter_type;
+	float divisibility;
+	int which_pixel;
+	int pixel_size = color_types[color_type];
+	int row;
+	for (int j = 0; j < data_size; j++) {
+		// Get filter type of row
+		filter_type = data[(int)floor(j/row_size)*row_size];
+		// Determine if the data is the first of the row
+		divisibility = ((float)j/(float)row_size);
+		if (divisibility-floor(divisibility) == 0) {}
+		else {
+			// Get row of data;
+			row = floor(divisibility);
+			// Calculate which pixel it is
+			which_pixel = floor((j-1)/pixel_size);
+			// If the filter is none
+			if (filter_type == 0) {
+				// Return data as is
+				pixel_data[row][which_pixel][(j-1)-(pixel_size*which_pixel)] = data[j];
+			}
+		}
+	}
 }

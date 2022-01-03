@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "zlib.h"
+#include <zlib.h>
 
 // Get size of png
 size_t size_png(char* filename) {

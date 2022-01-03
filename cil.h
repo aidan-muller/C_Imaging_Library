@@ -1,3 +1,6 @@
+// C Imaging Library
+// Written by Aidan Muller
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -155,27 +158,52 @@ void get_png_pixels(int* data, size_t data_size, int w, int h, int color_type) {
 	int pixel_data[h][w][color_types[color_type]];
 	// Get size of each row
 	int row_size = 1 + (w*color_types[color_type]);
+	int pixel_values[h][row_size];
+	int filter_methods[h];
 	int filter_type;
 	float divisibility;
 	int which_pixel;
+	int column;
 	int pixel_size = color_types[color_type];
 	int row;
-	for (int j = 0; j < data_size; j++) {
-		// Get filter type of row
-		filter_type = data[(int)floor(j/row_size)*row_size];
-		// Determine if the data is the first of the row
-		divisibility = ((float)j/(float)row_size);
-		if (divisibility-floor(divisibility) == 0) {}
-		else {
-			// Get row of data;
-			row = floor(divisibility);
-			// Calculate which pixel it is
-			which_pixel = floor((j-1)/pixel_size);
-			// If the filter is none
-			if (filter_type == 0) {
-				// Return data as is
-				pixel_data[row][which_pixel][(j-1)-(pixel_size*which_pixel)] = data[j];
+	// Convert unfiltered pixel data into neat rows
+	// Makes it easier further on
+	for (int j = 0; j < h; j++) {
+		filter_methods[j] = data[(j*row_size)];
+		for (int i = 1; i < row_size; i++) {
+			pixel_values[j][(i-1)] = data[(j*row_size) + i];
+		}
+	}
+	for (int j = 0; j < h; j++) {
+		for (int i = 0; i < w; i++) {
+			for (int n = 0; n < pixel_size; n++) {
+				// Filter Method 0 
+				// Leave as is
+				if (filter_methods[j] == 0) {
+					pixel_data[j][i][n] = pixel_values[j][i*pixel_size + n];
+				}
+				// Filter Method 1
+				// Add to the pixel to the left (where there is a pixel to the left)
+				if (filter_methods[j] == 1) {
+					if (i == 0) {
+						pixel_data[j][i][n] = pixel_values[j][i*pixel_size+n];
+					}
+					else {
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+pixel_data[j][i-1][n])%256;
+					}
+				}
+				// Filter Method 2
+				// Add to the pixel above
+				if (filter_methods[j] == 2) {
+					pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n] + pixel_data[j-1][i][n])%256;
+				}
 			}
 		}
+	}
+	for (int j = 0; j < 4; j++) {
+		for (int i = 0; i < 4; i++) {
+			printf("%d ", pixel_data[1][j][i]);
+		}
+		printf("\n");
 	}
 }

@@ -112,10 +112,10 @@ size_t get_compressed_png_data_size(int* data, size_t file_size) {
 }
 
 // Get compressed PNG data 
-void get_compressed_png_data(int* data, size_t file_size, int* output) {
+void get_compressed_png_data(int* data, size_t file_size, size_t compressed_size, int* output) {
 	int idat = find_chunk_in_png("IDAT", data, file_size)+4;
 	int iend = find_chunk_in_png("IEND", data, file_size);
-	for (int i = 0; i < file_size; i++) {
+	for (int i = 0; i < compressed_size; i++) {
 		output[i] = data[i+idat];
 		// sprintf(output, "%s%c", output, data[i]);
 	}
@@ -149,6 +149,24 @@ void decompress_compressed_png_data(int* compressed_data, size_t compressed_size
 	}
 	free(ostream);
 	free(istream);
+}
+
+// Paeth Predictor
+int paeth_predictor(int a, int b, int c) {
+	int pa, pb, pc, p;
+	p = a+b-c;
+	pa = abs(p-a);
+	pb = abs(p-b);
+	pc = abs(p-c);
+	if (pa <= pb && pa <= pc) {
+		return a;
+	}
+	else if (pb <= pc) {
+		return b;
+	}
+	else {
+		return c;
+	}
 }
 
 // Get pixel data
@@ -199,19 +217,29 @@ void get_png_pixels(int* data, size_t data_size, int w, int h, int color_type) {
 				}
 				if (filter_methods[j] == 3) {
 					if (i == 0) {
-						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+(int)floor((float)pixel_data[j-1][i][n]/(float)2));
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+(int)floor((float)pixel_data[j-1][i][n]/(float)2))%256;
 					}
 					else {
-						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+(int)floor((float)(pixel_data[j-1][i][n]+pixel_data[j][i-1][n])/(float)2));
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n]+(int)floor((float)(pixel_data[j-1][i][n]+pixel_data[j][i-1][n])/(float)2))%256;
+					}
+				}
+				if (filter_methods[j] == 4) {
+					if (i == 0) {
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n] + paeth_predictor(0, pixel_data[j-1][i][n], 0))%256;
+					}
+					else {
+						pixel_data[j][i][n] = (pixel_values[j][i*pixel_size+n] + paeth_predictor(pixel_data[j][i-1][n], pixel_data[j-1][i][n], pixel_data[j-1][i-1][n]))%256;
 					}
 				}
 			}
 		}
 	}
-	for (int j = 0; j < 4; j++) {
-		for (int i = 0; i < 4; i++) {
-			printf("%d ", pixel_data[3][j][i]);
+	for (int j = 0; j < h; j++) {
+		for (int i = 0; i < w; i++) {
+			for (int n = 0; n < pixel_size; n++) {
+				printf("%d ", pixel_data[j][i][n]);
+			}
+			printf("\n");
 		}
-		printf("\n");
 	}
 }
